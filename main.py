@@ -40,6 +40,18 @@ lock = threading.Lock()
 # Supported languages
 LANGUAGES = ['en', 'ru']
 
+# Language names mapping
+LANGUAGE_NAMES = {
+    'en': {
+        'en': 'English',
+        'ru': 'Russian'
+    },
+    'ru': {
+        'en': 'Английский',
+        'ru': 'Русский'
+    }
+}
+
 # Translations dictionary
 translations = {
     'en': {
@@ -55,9 +67,11 @@ translations = {
             "You can change the language anytime by sending /language."
         ),
         'choose_language': "🌐 *Please choose your language:*",
-        'language_set': "✅ *Language set to English.*",
+        'language_set': "✅ *Language set to {language_name}.*",
+        'language_changed': "✅ *Language changed to {language_name}.*",
         'search_currency_prompt': "🔎 *Enter the symbol or name of the cryptocurrency:*",
         'set_interval_prompt': "⏲️ *Enter the update interval in minutes (e.g., 120 for 2 hours):*",
+        'interval_set': "✅ *Update interval set to {interval} minutes.*",
         'invalid_input': "❌ Invalid input. Please try again.",
         'currency_added': "✅ *{crypto}* has been added to your monitoring list.",
         'currency_exists': "⚠️ *{crypto}* is already in your list.",
@@ -74,8 +88,7 @@ translations = {
         'alert_triggered': "🚨 *{crypto}* has reached your alert price of ${price:,.2f}!",
         'enter_alert': "❌ Usage: /set_alert SYMBOL PRICE",
         'invalid_price': "❌ Invalid price. Please enter a numeric value.",
-        'language_prompt': "🌐 *Choose your language:*",
-        'language_changed': "✅ *Language changed successfully.*",
+        'language_prompt': "🌐 *Please choose your language:*",
         'invalid_option': "❓ Invalid option. Please select an action from the menu.",
         'not_enough_data': "ℹ️ Not enough data to generate a graph. Please wait for more price updates."
     },
@@ -92,9 +105,11 @@ translations = {
             "Вы можете изменить язык в любое время, отправив /language."
         ),
         'choose_language': "🌐 *Пожалуйста, выберите язык:*",
-        'language_set': "✅ *Язык установлен на русский.*",
+        'language_set': "✅ *Язык установлен на {language_name}.*",
+        'language_changed': "✅ *Язык изменён на {language_name}.*",
         'search_currency_prompt': "🔎 *Введите символ или название криптовалюты:*",
         'set_interval_prompt': "⏲️ *Введите интервал обновления в минутах (например, 120 для 2 часов):*",
+        'interval_set': "✅ *Интервал обновления установлен на {interval} минут(ы).*",
         'invalid_input': "❌ Неверный ввод. Пожалуйста, попробуйте снова.",
         'currency_added': "✅ *{crypto}* добавлен в ваш список наблюдения.",
         'currency_exists': "⚠️ *{crypto}* уже есть в вашем списке.",
@@ -112,7 +127,6 @@ translations = {
         'enter_alert': "❌ Использование: /set_alert SYMBOL PRICE",
         'invalid_price': "❌ Неверная цена. Пожалуйста, введите числовое значение.",
         'language_prompt': "🌐 *Пожалуйста, выберите язык:*",
-        'language_changed': "✅ *Язык успешно изменен.*",
         'invalid_option': "❓ Неверный вариант. Пожалуйста, выберите действие из меню.",
         'not_enough_data': "ℹ️ Недостаточно данных для создания графика. Пожалуйста, подождите больше обновлений цен."
     }
@@ -195,8 +209,19 @@ def set_language_start(message):
             'last_prices': {},
             'alerts': {}
         }
-    bot.send_message(message.chat.id, tr(message.chat.id, 'language_set'), reply_markup=generate_menu(message.chat.id), parse_mode="Markdown")
-    bot.send_message(message.chat.id, tr(message.chat.id, 'welcome'), parse_mode="Markdown", reply_markup=generate_menu(message.chat.id))
+    language_name = LANGUAGE_NAMES[language][language]
+    bot.send_message(
+        message.chat.id,
+        tr(message.chat.id, 'language_set', language_name=language_name),
+        reply_markup=generate_menu(message.chat.id),
+        parse_mode="Markdown"
+    )
+    bot.send_message(
+        message.chat.id,
+        tr(message.chat.id, 'welcome'),
+        parse_mode="Markdown",
+        reply_markup=generate_menu(message.chat.id)
+    )
 
 # Command to change language
 @bot.message_handler(commands=['language'])
@@ -216,7 +241,13 @@ def set_language(message):
         language = 'en'  # Default to English
     with lock:
         user_settings[message.chat.id]['language'] = language
-    bot.send_message(message.chat.id, tr(message.chat.id, 'language_changed'), reply_markup=generate_menu(message.chat.id), parse_mode="Markdown")
+    language_name = LANGUAGE_NAMES[language][language]
+    bot.send_message(
+        message.chat.id,
+        tr(message.chat.id, 'language_changed', language_name=language_name),
+        reply_markup=generate_menu(message.chat.id),
+        parse_mode="Markdown"
+    )
 
 # Message handler for main menu buttons
 @bot.message_handler(func=lambda message: True)
@@ -236,7 +267,7 @@ def handle_menu(message):
         }
     else:
         options = {
-            "🔎 Search Currency": 'search_currency',  # Corrected this line
+            "🔎 Search Currency": 'search_currency',
             "⏲️ Set Interval": 'set_interval',
             "👁️ Show Selected": 'show_selected',
             "❌ Delete Token": 'delete_token',
@@ -262,6 +293,7 @@ def handle_menu(message):
         stop_updates(message)
     else:
         bot.send_message(message.chat.id, tr(message.chat.id, 'invalid_option'), reply_markup=generate_menu(message.chat.id))
+
 # Function to search and add a cryptocurrency with fuzzy search and pagination
 def search_currency(message):
     query = message.text.strip().upper()
@@ -356,7 +388,12 @@ def set_interval(message):
             }
         else:
             user_settings[message.chat.id]['interval'] = interval
-    bot.send_message(message.chat.id, tr(message.chat.id, 'language_changed'), parse_mode="Markdown", reply_markup=generate_menu(message.chat.id))
+    bot.send_message(
+        message.chat.id,
+        tr(message.chat.id, 'interval_set', interval=interval),
+        parse_mode="Markdown",
+        reply_markup=generate_menu(message.chat.id)
+    )
 
 # Function to show selected cryptocurrencies
 def show_selected_currencies(message):
@@ -550,7 +587,7 @@ def price_update_loop():
                 send_price_history(chat_id)
             # Check for price alerts
             check_price_alerts(chat_id, differences)
-        # Sleep based on the smallest interval among users
+        # Sleep for 60 seconds before next update
         time.sleep(60)
 
 # Function to check for price alerts
