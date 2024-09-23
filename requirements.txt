@@ -1,0 +1,4 @@
+pyTelegramBotAPI==4.5.0
+requests==2.26.0
+matplotlib==3.4.3
+cachetools==5.0.0
