@@ -16,7 +16,7 @@ matplotlib.use('Agg')
 
 # Load environment variables for security (ensure you have TELEGRAM_TOKEN and COINMARKETCAP_API_KEY set)
 # You can use a .env file and the python-dotenv package for this
-TELEGRAM_TOKEN = '7762094310:AAEL1GgKxThWNxMPfm2NGkpSjw2wlE39W_g'
+TELEGRAM_TOKEN = '77752790634:AAFHRw8nYWFm98cT6xODQLs9egNnqym7zbg'
 COINMARKETCAP_API_KEY = '404342be-32e0-4649-b77e-64de96f58225'
 
 if not TELEGRAM_TOKEN or not COINMARKETCAP_API_KEY:
