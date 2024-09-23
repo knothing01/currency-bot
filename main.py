@@ -236,12 +236,12 @@ def handle_menu(message):
         }
     else:
         options = {
-            "🔎 Search Currency" 'search_currency',
-            "⏲️ Set Interval",
-            "👁️ Show Selected",
-            "❌ Delete Token",
-            "📊 Request Graph",
-            "🛑 Stop Updates"
+            "🔎 Search Currency": 'search_currency',  # Corrected this line
+            "⏲️ Set Interval": 'set_interval',
+            "👁️ Show Selected": 'show_selected',
+            "❌ Delete Token": 'delete_token',
+            "📊 Request Graph": 'request_graph',
+            "🛑 Stop Updates": 'stop_updates'
         }
 
     action = options.get(text, None)
@@ -262,7 +262,6 @@ def handle_menu(message):
         stop_updates(message)
     else:
         bot.send_message(message.chat.id, tr(message.chat.id, 'invalid_option'), reply_markup=generate_menu(message.chat.id))
-
 # Function to search and add a cryptocurrency with fuzzy search and pagination
 def search_currency(message):
     query = message.text.strip().upper()
